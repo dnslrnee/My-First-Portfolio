@@ -163,35 +163,38 @@ const inquiryForm = document.getElementById('inquiry-form');
 const inquirySuccess = document.getElementById('inquiry-success');
 
 if (inquiryForm && inquirySuccess) {
-  inquiryForm.addEventListener('submit', (event) => {
+  inquiryForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const formData = new FormData(inquiryForm);
-    const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      service: formData.get('service'),
-      message: formData.get('message')
-    };
+    formData.append('_subject', 'New portfolio inquiry');
+    formData.append('_captcha', 'false');
+    formData.append('_template', 'table');
 
-    fetch('https://formsubmit.co/ajax/sarmientodeniselorraine@gmail.com', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-      .then((response) => response.json())
-      .then(() => {
-        inquirySuccess.classList.add('visible');
-        inquiryForm.reset();
-      })
-      .catch((error) => {
-        inquirySuccess.textContent = 'Thank you for reaching out! I’ve received your inquiry and will get back to you soon.';
-        inquirySuccess.classList.add('visible');
-        console.log(error);
+    inquirySuccess.textContent = 'Sending your message...';
+    inquirySuccess.classList.remove('visible');
+
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/sarmientodeniselorraine@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json'
+        },
+        body: formData
       });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      inquirySuccess.textContent = 'Thank you for reaching out! I’ve received your inquiry and will get back to you soon.';
+      inquirySuccess.classList.add('visible');
+      inquiryForm.reset();
+    } catch (error) {
+      inquirySuccess.textContent = 'There was a problem sending your message. Please try again or email me directly.';
+      inquirySuccess.classList.add('visible');
+      console.error('Inquiry form error:', error);
+    }
   });
 }
 
